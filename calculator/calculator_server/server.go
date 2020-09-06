@@ -12,6 +12,39 @@ import (
 
 type server struct {}
 
+func (s server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	fmt.Printf("Find Maximum was invoked.\n")
+
+	maxInteger := int32(0)
+
+	for {
+		request, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+
+		inputInteger := request.GetInputInteger()
+
+		if inputInteger > maxInteger {
+			maxInteger = inputInteger
+
+			errSend := stream.Send(&calculatorpb.FindMaximumResponse{
+				MaxInteger: maxInteger,
+			})
+
+			if errSend != nil {
+				log.Fatalf("Error while sending data to client: %v", errSend)
+				return errSend
+			}
+		}
+	}
+}
+
 func (s server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
 	fmt.Printf("Compute Average was invoked.\n")
 
